@@ -1,0 +1,11 @@
+[package]
+name = "uosp"
+version = "0.1.0"
+authors = ["Sahid Orentino Ferdjaoui <sahid.ferdjaoui@canonical.com>"]
+edition = "2018"
+
+[[bin]]
+name = "uosp"
+
+[dependencies]
+clap = "*"
