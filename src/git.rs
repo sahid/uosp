@@ -1,7 +1,10 @@
+// Copyright 2019 Canonical Ltd. All rights reserved.  Use
+// of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
 use std::fmt::{self, Display};
 use std::path::PathBuf;
 use std::process::Command;
-
 
 #[derive(Debug)]
 pub enum Error {

@@ -10,17 +10,12 @@ use std::process::Command;
 
 use crate::git::{Git, Github, VCSGit, GitClone};
 
-
-
 static GIT_STABLE_BRANCH: &'static str = "stable";
 
 #[derive(Debug)]
 pub enum Error {
-    CheckoutError(String),
-    CloneError(String),
     VersionError(String),
     ImportError(String, String),
-    CommitError(),
     ShowError(),
     BuildError(),
     Fatal(String),
@@ -30,11 +25,8 @@ impl Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         use self::Error::*;
         match self {
-            CheckoutError(s) => write!(f, "unable to checkout requested branch {}", s),
-            CloneError(s) => write!(f, "unable to clone project {}", s),
             VersionError(s) => write!(f, "unable to download tarball {}", s),
             ImportError(p, v) => write!(f, "unable to import {} to {}", v, p),
-            CommitError() => write!(f, "unable to execute git commit process"),
             ShowError() => write!(f, "unable to execute git show process"),
             BuildError() => write!(f, "unable to execute buildackage process"),
             Fatal(s) => write!(f, "unexpected error {}", s),
@@ -95,7 +87,7 @@ impl Package {
         Ok(pkg)
     }
 
-    /// Returns branch nae based on the release.
+    /// Returns branch name based on the release.
     /// If the branch name != master returns stable/branch.
     pub fn format_branch(release: &str) -> String {
         if release == "master" {
@@ -105,7 +97,7 @@ impl Package {
         }
     }
 
-    /// Indicates whehter the `workdir` for this Package exists
+    /// Indicates whether the `workdir` for this Package exists
     pub fn exists(&self) -> bool {
         self.workdir.exists()
     }
