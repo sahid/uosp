@@ -72,7 +72,7 @@ fn snapshot(name: &str, release: &str, version: &str) -> Result<()> {
     pkg.apply_tarball(version, &archive)?;
 
     let chg = &pkg.changelog;
-    chg.new_release(version, &format!(
+    chg.new_release(&gitversion, &format!(
         "New upstream release {}.", version));
 
     git.debcommit()?;
