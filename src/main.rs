@@ -18,7 +18,6 @@ fn get_current_dir() -> std::path::PathBuf {
     std::env::current_dir().unwrap()
 }
 
-
 /// Rebases a package to a new upstream version
 fn rebase(name: &str, release: &str, version: &str, bugid: &str) -> Result<()> {
     println!("Rebasing {} {} to new upstream version '{}', #{}...",
@@ -47,7 +46,6 @@ fn rebase(name: &str, release: &str, version: &str, bugid: &str) -> Result<()> {
 
     Ok(())
 }
-
 
 /// Creates snapshot of an upstream source and rebase the package with it.
 fn snapshot(name: &str, release: &str, version: &str) -> Result<()> {
@@ -106,6 +104,15 @@ fn clone(name: &str) -> Result<()> {
     Ok(())
 }
 
+fn publish(name: &str, ppa: &str, serie: &str, fake: bool) -> Result<()> {
+    println!("Backport {} to '{}', ubuntu {}, fake-time: {:?}...", name, ppa, serie, fake);
+
+    let pkg = Package::clone(name, get_current_dir())?;
+    pkg.build()?;
+    pkg.publish(ppa, serie, true);
+
+    Ok(())
+}
 
 /// Pull sources of debian packages.
 fn debpull(project: &str) -> Result<()> {
@@ -124,7 +131,6 @@ fn pushlp(name: &str, account: &str) -> Result<()> {
 
     Ok(())
 }
-
 
 fn cli() -> std::result::Result<(), ()> {
     let matches = App::new(crate_name!())
@@ -167,6 +173,22 @@ fn cli() -> std::result::Result<(), ()> {
                      .help("Openstack package name. (e.g. nova).")
                      .required(true)))
         .subcommand(
+            SubCommand::with_name("publish")
+                .about("Publish package to launchpad.")
+                .arg(Arg::with_name("project")
+                     .help("Openstack package name. (e.g. nova).")
+                     .required(true))
+                .arg(Arg::with_name("ppa")
+                     .help("Launchpad PPA used. (e.g. ppa:sahid-ferdjaoui/eoan-train).")
+                     .required(true))
+                .arg(Arg::with_name("serie")
+                     .help("Ubuntu serie used to build package. (e.g. eoan)")
+                     .required(true)))
+                /*
+                .arg(Arg::with_name("fake")
+                     .help("Use fake timestamp.")
+                     .required(true)))*/
+        .subcommand(
             SubCommand::with_name("clone")
                 .about("Git clone OpenStack package from Ubuntu repository.")
                 .arg(Arg::with_name("project")
@@ -197,6 +219,11 @@ fn cli() -> std::result::Result<(), ()> {
         ret = snapshot(matches.value_of("project").unwrap(),
                        matches.value_of("release").unwrap(),
                        matches.value_of("version").unwrap());
+    } else if let Some(matches) = matches.subcommand_matches("publish") {
+        ret = publish(matches.value_of("project").unwrap(),
+                      matches.value_of("ppa").unwrap(),
+                      matches.value_of("serie").unwrap(),
+                      /*matches.value_of("fake").unwrap()*/ true);
     } else if let Some(matches) = matches.subcommand_matches("clone") {
         ret = clone(matches.value_of("project").unwrap());
     } else if let Some(matches) = matches.subcommand_matches("debpull") {
@@ -218,5 +245,5 @@ fn cli() -> std::result::Result<(), ()> {
 }
 
 fn main() {
-    std::process::exit(if cli().is_ok() { 0 } else { 1 });
+    std::process::exit(if cli().is_ok() {0} else {1});
 }

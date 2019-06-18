@@ -187,6 +187,26 @@ impl Package {
 
         format!("{}~git{}.{}", version, date, githash)
     }
+
+    /// Publishing a package in launchpad PPA
+    pub fn publish(&self, ppa: &str, serie: &str, fake: bool) -> Result<()> {
+        let version = self.changelog.get_head_version().unwrap();
+        // Really ugly...
+        let o = Command::new("date")
+            .arg("+%Y%m%d%H%M")
+            .output()?;
+        let date = String::from_utf8(o.stdout).unwrap().trim().to_string();
+
+        //manila_9.0.0~b1~git2019061715.86823b5c-0ubuntu1.dsc
+        Command::new("backportpackage")
+            .current_dir(&self.rootdir)
+            .arg("-S").arg(format!("~ppa{}", &date))
+            .arg("-u").arg(ppa)
+            .arg("-d").arg(serie)
+            .arg("-y").arg(format!("build-area/{}_{}.dsc", &self.name, &version))
+            .status()?;
+        Ok(())
+    }
 }
 
 pub struct ChangeLog {
@@ -200,7 +220,7 @@ impl ChangeLog {
         }
     }
 
-    pub fn get_head_version(&self) -> String {
+    pub fn get_head_full_version(&self) -> String {
         let o = Command::new("dpkg-parsechangelog")
             .current_dir(&self.workdir)
             .arg("-S")
@@ -211,12 +231,24 @@ impl ChangeLog {
     }
 
     pub fn get_head_epoch(&self) -> Option<u32> {
-        let ver = self.get_head_version();
+        let ver = self.get_head_full_version();
         let vec: Vec<&str> = ver.split(":").collect();
         match vec[0].parse::<u32>() {
             Ok(v) => Some(v),
             Err(_) => None
         }
+    }
+
+    pub fn get_head_version(&self) -> Option<String> {
+        let ver = self.get_head_full_version();
+        let vec: Vec<&str> = ver.split(":").collect();
+        if vec.len() > 1 {
+            match vec[1].parse::<String>() {
+                Ok(v) => return Some(v),
+                Err(_) => return None
+            }
+        }
+        return Some(ver)
     }
 
     pub fn new_release(&self, version: &str, message: &str) {
