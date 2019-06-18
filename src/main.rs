@@ -48,7 +48,7 @@ fn rebase(name: &str, release: &str, version: &str, bugid: &str) -> Result<()> {
 }
 
 /// Creates snapshot of an upstream source and rebase the package with it.
-fn snapshot(name: &str, release: &str, version: &str) -> Result<()> {
+fn snapshot(name: &str, release: &str, version: &str, upstream: Option<&str>) -> Result<()> {
     println!("Updating package {} {} to new upstream snapshot '{}'...",
              name, release, version);
 
@@ -62,11 +62,16 @@ fn snapshot(name: &str, release: &str, version: &str) -> Result<()> {
     git.checkout("upstream")?;
     git.checkout(&branch)?;
 
-    let githash = pkg.generate_snapshot(release, version)?;
+    let githash = pkg.generate_snapshot(release, version, upstream)?;
     let gitversion = pkg.version_from_githash(version, &githash);
 
     // The actions in a package refer always to rootdir/name/
-    let archive = format!("../{}_{}.orig.tar.gz", name, gitversion);
+    let nameup = if upstream.is_some() {
+        upstream.unwrap()
+    } else {
+        name
+    };
+    let archive = format!("../{}_{}.orig.tar.gz", nameup, gitversion);
     pkg.apply_tarball(version, &archive)?;
 
     let chg = &pkg.changelog;
@@ -79,8 +84,7 @@ fn snapshot(name: &str, release: &str, version: &str) -> Result<()> {
     // Wanning that the process is not yet finished.
     // TODO(sahid): implement some sort of magic to handle deps.
     println!("");
-    println!("/!\ Please consider to check (build-)deps.");
-    println!("");
+    println!("/!\\ Please consider to check (build-)deps.");
 
     Ok(())
 }
@@ -167,7 +171,10 @@ fn cli() -> std::result::Result<(), ()> {
                      .required(true))
                 .arg(Arg::with_name("version")
                      .help("The next OpenStack version. (e.g. 19.0.1~b1).")
-                     .required(true)))
+                     .required(true))
+                .arg(Arg::with_name("upstream")
+                     .help("Upstream name used to grab source on github. (e.g. trove).")
+                     .required(false)))
         .subcommand(
             SubCommand::with_name("build")
                 .about("Build the Ubuntu package.")
@@ -220,7 +227,8 @@ fn cli() -> std::result::Result<(), ()> {
     } else if let Some(matches) = matches.subcommand_matches("snapshot") {
         ret = snapshot(matches.value_of("project").unwrap(),
                        matches.value_of("release").unwrap(),
-                       matches.value_of("version").unwrap());
+                       matches.value_of("version").unwrap(),
+                       matches.value_of("upstream"));
     } else if let Some(matches) = matches.subcommand_matches("publish") {
         ret = publish(matches.value_of("project").unwrap(),
                       matches.value_of("ppa").unwrap(),

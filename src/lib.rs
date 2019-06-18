@@ -148,21 +148,27 @@ impl Package {
     /// Downloads upstream release, then use pkos-generate-snapshot to
     /// create tarball. This function returns a githash as tarball
     /// identifier.
-    pub fn generate_snapshot(&self, release: &str, version: &str) -> Result<String> {
+    pub fn generate_snapshot(&self, release: &str, version: &str, upstream: Option<&str>) -> Result<String> {
         let branch = Self::format_branch(release);
 
         // rootdir for the upstream source is './t'.
         let mut rootdir = self.rootdir.clone();
         rootdir.push("t");
 
-        let upstream = Github::clone(&self.name, rootdir)?;
-        upstream.checkout(&branch)?;
-        upstream.update()?;
+        let nameup = if upstream.is_some() {
+            upstream.unwrap()
+        } else {
+            &self.name
+        };
+
+        let gitupstream = Github::clone(nameup, rootdir)?;
+        gitupstream.checkout(&branch)?;
+        gitupstream.update()?;
         Command::new("pkgos-generate-snapshot")
-            .current_dir(&upstream.workdir)
+            .current_dir(&gitupstream.workdir)
             .status()?;
 
-        let githash = upstream.get_hash()?;
+        let githash = gitupstream.get_hash()?;
         let gitversion = self.version_from_githash(version, &githash);
 
         // The tarball generated is located in '~/tarballs', so let's
@@ -171,7 +177,7 @@ impl Package {
             .arg("-c")
             .arg(format!(
                 "mv ~/tarballs/{}_*.orig.tar.gz {}/{}_{}.orig.tar.gz",
-                self.name, self.rootdir.to_str().unwrap(), self.name, gitversion))
+                nameup, self.rootdir.to_str().unwrap(), nameup, gitversion))
             .status()?;
 
         Ok(githash)
