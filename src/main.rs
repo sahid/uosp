@@ -78,7 +78,9 @@ fn snapshot(name: &str, release: &str, version: &str) -> Result<()> {
 
     // Wanning that the process is not yet finished.
     // TODO(sahid): implement some sort of magic to handle deps.
-    println!("Please consider to check (build-)deps...");
+    println!("");
+    println!("/!\ Please consider to check (build-)deps.");
+    println!("");
 
     Ok(())
 }
