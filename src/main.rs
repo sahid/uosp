@@ -4,7 +4,7 @@
 
 //! # Ubuntu OpenStack Package
 //!
-//! Collection of CLI tools helping managing Ubuntu OpenStack
+//! Collection of CLI commands helping managing Ubuntu OpenStack
 //! packages.
 
 #[macro_use]
@@ -149,30 +149,38 @@ fn cli() -> std::result::Result<(), ()> {
             SubCommand::with_name("rebase")
                 .about("Rebase package to a new upstream release.")
                 .arg(Arg::with_name("project")
+                     .short("p").long("project")
                      .help("Openstack package name. (e.g. nova).")
                      .required(true))
                 .arg(Arg::with_name("release")
+                     .short("r").long("release")
                      .help("Openstack release name. (e.g. stein, master).")
                      .required(true))
                 .arg(Arg::with_name("version")
+                     .short("v").long("version")
                      .help("Openstack version to rebase on. (e.g. 19.0.1).")
                      .required(true))
                 .arg(Arg::with_name("bugid")
+                     .short("b").long("bugid")
                      .help("Launchpad bug ID associated to the rebase.")
                      .required(true)))
         .subcommand(
             SubCommand::with_name("snapshot")
                 .about("Update an Ubuntu package to a new upstream snapshot.")
                 .arg(Arg::with_name("project")
+                     .short("p").long("project")
                      .help("Openstack package name. (e.g. nova).")
                      .required(true))
                 .arg(Arg::with_name("release")
+                     .short("r").long("release")
                      .help("Openstack release name. (e.g. stein, master).")
                      .required(true))
                 .arg(Arg::with_name("version")
+                     .short("v").long("version")
                      .help("The next OpenStack version. (e.g. 19.0.1~b1).")
                      .required(true))
                 .arg(Arg::with_name("upstream")
+                     .short("u").long("upstream")
                      .help("Upstream name used to grab source on github. (e.g. trove).")
                      .required(false)))
         .subcommand(
@@ -185,12 +193,15 @@ fn cli() -> std::result::Result<(), ()> {
             SubCommand::with_name("publish")
                 .about("Publish package to launchpad.")
                 .arg(Arg::with_name("project")
+                     .short("p").long("project")
                      .help("Openstack package name. (e.g. nova).")
                      .required(true))
                 .arg(Arg::with_name("ppa")
+                     .short("P").long("ppa")
                      .help("Launchpad PPA used. (e.g. ppa:sahid-ferdjaoui/eoan-train).")
                      .required(true))
                 .arg(Arg::with_name("serie")
+                     .short("s").long("serie")
                      .help("Ubuntu serie used to build package. (e.g. eoan)")
                      .required(true)))
                 /*
@@ -201,15 +212,18 @@ fn cli() -> std::result::Result<(), ()> {
             SubCommand::with_name("clone")
                 .about("Git clone OpenStack package from Ubuntu repository.")
                 .arg(Arg::with_name("project")
+                     .short("p").long("project")
                      .help("Openstack package name. (e.g. nova).")
                      .required(true)))
         .subcommand(
             SubCommand::with_name("pushlp")
                 .about("Force push branch on a git launchpad account.")
                 .arg(Arg::with_name("project")
+                     .short("p").long("project")
                      .help("Openstack package name. (e.g. nova).")
                      .required(true))
                 .arg(Arg::with_name("account")
+                     .short("a").long("account")
                      .help("Launchpad account. (e.g. sahid-ferdjaoui).")
                      .required(true)))
         .get_matches();
