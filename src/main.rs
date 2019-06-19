@@ -48,10 +48,11 @@ fn rebase(name: &str, release: &str, version: &str, bugid: &str) -> Result<()> {
 }
 
 /// Creates snapshot of an upstream source and rebase the package with it.
-fn snapshot(name: &str, release: &str, version: &str, upstream: Option<&str>) -> Result<()> {
+fn snapshot(name: &str, release: Option<&str>, version: &str, upstream: Option<&str>) -> Result<()> {
     println!("Updating package {} {} to new upstream snapshot '{}'...",
-             name, release, version);
-
+             name, release.unwrap_or("master"), version);
+    
+    let release = release.unwrap_or("master");
     let workdir = get_current_dir();
     let branch = Package::format_branch(release);
 
@@ -149,38 +150,38 @@ fn cli() -> std::result::Result<(), ()> {
             SubCommand::with_name("rebase")
                 .about("Rebase package to a new upstream release.")
                 .arg(Arg::with_name("project")
-                     .short("p").long("project")
+                     //.short("p").long("project").takes_value(true)
                      .help("Openstack package name. (e.g. nova).")
                      .required(true))
                 .arg(Arg::with_name("release")
-                     .short("r").long("release")
+                     //.short("r").long("release").takes_value(true)
                      .help("Openstack release name. (e.g. stein, master).")
                      .required(true))
                 .arg(Arg::with_name("version")
-                     .short("v").long("version")
+                     //.short("v").long("version").takes_value(true)
                      .help("Openstack version to rebase on. (e.g. 19.0.1).")
                      .required(true))
                 .arg(Arg::with_name("bugid")
-                     .short("b").long("bugid")
+                     ////.short("b").long("bugid").takes_value(true)
                      .help("Launchpad bug ID associated to the rebase.")
                      .required(true)))
         .subcommand(
             SubCommand::with_name("snapshot")
                 .about("Update an Ubuntu package to a new upstream snapshot.")
                 .arg(Arg::with_name("project")
-                     .short("p").long("project")
+                     //.short("p").long("project").takes_value(true)
                      .help("Openstack package name. (e.g. nova).")
                      .required(true))
                 .arg(Arg::with_name("release")
-                     .short("r").long("release")
-                     .help("Openstack release name. (e.g. stein, master).")
-                     .required(true))
+                     .short("r").long("release").takes_value(true)
+                     .help("Openstack release name. Default 'master'.")
+                     .required(false))
                 .arg(Arg::with_name("version")
-                     .short("v").long("version")
+                     //.short("v").long("version").takes_value(true)
                      .help("The next OpenStack version. (e.g. 19.0.1~b1).")
                      .required(true))
                 .arg(Arg::with_name("upstream")
-                     .short("u").long("upstream")
+                     .short("u").long("upstream").takes_value(true)
                      .help("Upstream name used to grab source on github. (e.g. trove).")
                      .required(false)))
         .subcommand(
@@ -193,15 +194,15 @@ fn cli() -> std::result::Result<(), ()> {
             SubCommand::with_name("publish")
                 .about("Publish package to launchpad.")
                 .arg(Arg::with_name("project")
-                     .short("p").long("project")
+                     //.short("p").long("project").takes_value(true)
                      .help("Openstack package name. (e.g. nova).")
                      .required(true))
                 .arg(Arg::with_name("ppa")
-                     .short("P").long("ppa")
+                     //.short("P").long("ppa").takes_value(true)
                      .help("Launchpad PPA used. (e.g. ppa:sahid-ferdjaoui/eoan-train).")
                      .required(true))
                 .arg(Arg::with_name("serie")
-                     .short("s").long("serie")
+                     //.short("s").long("serie").takes_value(true)
                      .help("Ubuntu serie used to build package. (e.g. eoan)")
                      .required(true)))
                 /*
@@ -212,18 +213,18 @@ fn cli() -> std::result::Result<(), ()> {
             SubCommand::with_name("clone")
                 .about("Git clone OpenStack package from Ubuntu repository.")
                 .arg(Arg::with_name("project")
-                     .short("p").long("project")
+                     //.short("p").long("project").takes_value(true)
                      .help("Openstack package name. (e.g. nova).")
                      .required(true)))
         .subcommand(
             SubCommand::with_name("pushlp")
                 .about("Force push branch on a git launchpad account.")
                 .arg(Arg::with_name("project")
-                     .short("p").long("project")
+                     //.short("p").long("project").takes_value(true)
                      .help("Openstack package name. (e.g. nova).")
                      .required(true))
                 .arg(Arg::with_name("account")
-                     .short("a").long("account")
+                     //.short("a").long("account").takes_value(true)
                      .help("Launchpad account. (e.g. sahid-ferdjaoui).")
                      .required(true)))
         .get_matches();
@@ -240,7 +241,7 @@ fn cli() -> std::result::Result<(), ()> {
         ret = build(matches.value_of("project").unwrap());
     } else if let Some(matches) = matches.subcommand_matches("snapshot") {
         ret = snapshot(matches.value_of("project").unwrap(),
-                       matches.value_of("release").unwrap(),
+                       matches.value_of("release"),
                        matches.value_of("version").unwrap(),
                        matches.value_of("upstream"));
     } else if let Some(matches) = matches.subcommand_matches("publish") {
