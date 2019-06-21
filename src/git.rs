@@ -180,6 +180,7 @@ impl GitClone for Github {
                 .current_dir(&rootdir)
                 .arg("clone")
                 .arg(format!("https://github.com/openstack/{}", name))
+                //.arg(format!("https://github.com/mfcloud/{}", name))
                 .output()?;
             if !o.status.success() {
                 return Err(Error::CloneError(name.to_string()));

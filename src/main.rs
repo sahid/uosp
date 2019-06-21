@@ -13,15 +13,26 @@ extern crate clap;
 use clap::{App, AppSettings, Arg, SubCommand};
 use uosp::*;
 
+const OS_MASTER: &'static str = "train";
 
 fn get_current_dir() -> std::path::PathBuf {
     std::env::current_dir().unwrap()
 }
 
+// https://stackoverflow.com/questions/38406793
+fn uppercase_first_letter(s: &str) -> String {
+    let mut c = s.chars();
+    match c.next() {
+        None => String::new(),
+        Some(f) => f.to_uppercase().collect::<String>() + c.as_str(),
+    }
+}
+
 /// Rebases a package to a new upstream version
-fn rebase(name: &str, release: &str, version: &str, bugid: &str) -> Result<()> {
-    println!("Rebasing {} {} to new upstream version '{}', #{}...",
-             name, release, version, bugid);
+fn rebase(name: &str, release: Option<&str>, version: &str, bugid: Option<&str>, no_os: bool) -> Result<()> {
+    println!("Rebasing {} {} to new upstream version '{}'...",
+             name, release.unwrap_or("master"), version);
+    let release = release.unwrap_or("master");
     let workdir = get_current_dir();
     let branch = Package::format_branch(release);
 
@@ -38,8 +49,26 @@ fn rebase(name: &str, release: &str, version: &str, bugid: &str) -> Result<()> {
     pkg.apply_tarball(version, &archive)?;
 
     let chg = &pkg.changelog;
-    chg.new_release(version, &format!(
-        "New upstream release {}. (LP# {})", version, bugid));
+    let formated_name = if release != "master" {
+        uppercase_first_letter(release)
+    } else {
+        uppercase_first_letter(OS_MASTER)
+    };
+
+    // Consider changelog message based on the kind of package,
+    // OpenStack or not.
+    let msg = if !no_os {
+        if bugid.is_some() {
+            format!("New upstream release for OpenStack {}. (LP# {})",
+                    formated_name, bugid.unwrap()).to_string()
+        } else {
+            format!("New upstream release for OpenStack {}.",
+                    formated_name).to_string()
+        }
+    } else {
+        format!("New upstream release {}.", version).to_string()
+    };
+    chg.new_release(version, &msg);
 
     git.debcommit()?;
     git.show()?;
@@ -154,17 +183,24 @@ fn cli() -> std::result::Result<(), ()> {
                      .help("Openstack package name. (e.g. nova).")
                      .required(true))
                 .arg(Arg::with_name("release")
-                     //.short("r").long("release").takes_value(true)
-                     .help("Openstack release name. (e.g. stein, master).")
-                     .required(true))
+                     .short("r").long("release").takes_value(true)
+                     .help("Openstack release name. (e.g. stein). \
+                            Default will be to consider to use the in-progress \
+                            release 'master'.")
+                     .required(false))
                 .arg(Arg::with_name("version")
                      //.short("v").long("version").takes_value(true)
                      .help("Openstack version to rebase on. (e.g. 19.0.1).")
                      .required(true))
                 .arg(Arg::with_name("bugid")
-                     ////.short("b").long("bugid").takes_value(true)
-                     .help("Launchpad bug ID associated to the rebase.")
-                     .required(true)))
+                     .short("b").long("bugid").takes_value(true)
+                     .help("Launchpad bug ID associated to the rebase (e.g: 123456).")
+                     .required(false))
+                .arg(Arg::with_name("no-os")
+                     .short("n").long("no-os")
+                     .help("Whether the project is an OpenStack package. as we may want \
+                            want rebase dependant package like python-ddt.")
+                     .required(false)))
         .subcommand(
             SubCommand::with_name("snapshot")
                 .about("Update an Ubuntu package to a new upstream snapshot.")
@@ -234,9 +270,10 @@ fn cli() -> std::result::Result<(), ()> {
 
     if let Some(matches) = matches.subcommand_matches("rebase") {
         ret = rebase(matches.value_of("project").unwrap(),
-                     matches.value_of("release").unwrap(),
+                     matches.value_of("release"),
                      matches.value_of("version").unwrap(),
-                     matches.value_of("bugid").unwrap());
+                     matches.value_of("bugid"),
+                     matches.is_present("no-os"));
     } else if let Some(matches) = matches.subcommand_matches("build") {
         ret = build(matches.value_of("project").unwrap());
     } else if let Some(matches) = matches.subcommand_matches("snapshot") {
