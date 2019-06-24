@@ -79,9 +79,10 @@ fn rebase(name: &str, release: Option<&str>, version: &str, bugid: Option<&str>,
 /// Creates snapshot of an upstream source and rebase the package with it.
 fn snapshot(name: &str, version: &str, upstream: Option<&str>) -> Result<()> {
     println!("Updating package {} to a new upstream snapshot...", name);
-    
+
+    let release = "master";
     let workdir = get_current_dir();
-    let branch = Package::format_branch("master");
+    let branch = Package::format_branch(release);
     let pkg = Package::clone(name, workdir.clone())?;
 
     let git = pkg.git.as_ref().unwrap();
