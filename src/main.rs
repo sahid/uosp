@@ -77,14 +77,11 @@ fn rebase(name: &str, release: Option<&str>, version: &str, bugid: Option<&str>,
 }
 
 /// Creates snapshot of an upstream source and rebase the package with it.
-fn snapshot(name: &str, release: Option<&str>, version: &str, upstream: Option<&str>) -> Result<()> {
-    println!("Updating package {} {} to new upstream snapshot '{}'...",
-             name, release.unwrap_or("master"), version);
+fn snapshot(name: &str, version: &str, upstream: Option<&str>) -> Result<()> {
+    println!("Updating package {} to a new upstream snapshot...", name);
     
-    let release = release.unwrap_or("master");
     let workdir = get_current_dir();
-    let branch = Package::format_branch(release);
-
+    let branch = Package::format_branch("master");
     let pkg = Package::clone(name, workdir.clone())?;
 
     let git = pkg.git.as_ref().unwrap();
@@ -208,10 +205,6 @@ fn cli() -> std::result::Result<(), ()> {
                      //.short("p").long("project").takes_value(true)
                      .help("Openstack package name. (e.g. nova).")
                      .required(true))
-                .arg(Arg::with_name("release")
-                     .short("r").long("release").takes_value(true)
-                     .help("Openstack release name. Default 'master'.")
-                     .required(false))
                 .arg(Arg::with_name("version")
                      //.short("v").long("version").takes_value(true)
                      .help("The next OpenStack version. (e.g. 19.0.1~b1).")
@@ -278,7 +271,6 @@ fn cli() -> std::result::Result<(), ()> {
         ret = build(matches.value_of("project").unwrap());
     } else if let Some(matches) = matches.subcommand_matches("snapshot") {
         ret = snapshot(matches.value_of("project").unwrap(),
-                       matches.value_of("release"),
                        matches.value_of("version").unwrap(),
                        matches.value_of("upstream"));
     } else if let Some(matches) = matches.subcommand_matches("publish") {
