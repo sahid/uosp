@@ -62,6 +62,7 @@ impl Package {
     // TODO(sahid): This should probably return a Result<Package>
     pub fn new(name: &str, rootdir: PathBuf) -> Package {
         // TODO(sahid): Do we really need this here?
+        // I should refer gbp.conf
         let mut builddir = rootdir.clone();
         builddir.push("build-area");
         Command::new("mkdir").arg("-p")
@@ -209,11 +210,37 @@ impl Package {
             .arg("-S").arg(format!("~ppa{}", &date))
             .arg("-u").arg(ppa)
             .arg("-d").arg(serie)
+        // we should refer d/gbp.conf
             .arg("-y").arg(format!("build-area/{}_{}.dsc", &self.name, &version))
             .status()?;
         Ok(())
     }
 }
+
+
+pub enum ChangeLogMessage {
+    OSNewUpstreamRelease(String),
+    OSNewUpstreamReleaseWithBug(String, String),
+    NewUpstreamRelease(String),
+    NewUpstreamReleaseWithBug(String, String),
+}
+
+impl Display for ChangeLogMessage {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        use self::ChangeLogMessage::*;
+        match self {
+            OSNewUpstreamRelease(s) => write!(
+                f, "New upstream release for OpenStack {}.", s),
+            OSNewUpstreamReleaseWithBug(s, b) => write!(
+                f, "New upstream release for OpenStack {}. (LP# {}).", s, b),
+            NewUpstreamRelease(s) => write!(
+                f, "New upstream release for OpenStack {}.", s),
+            NewUpstreamReleaseWithBug(s, b) => write!(
+                f, "New upstream release {}. (LP# {}).", s, b),
+        }
+    }
+}
+
 
 pub struct ChangeLog {
     pub workdir: PathBuf,
@@ -257,7 +284,7 @@ impl ChangeLog {
         return Some(ver)
     }
 
-    pub fn new_release(&self, version: &str, message: &str) {
+    pub fn new_release(&self, version: &str, message: ChangeLogMessage) {
         // TODO: case without epoch
         let newversion = match self.get_head_epoch() {
             Some(epoch) => format!("{}:{}-0ubuntu1", epoch, version),
@@ -267,7 +294,7 @@ impl ChangeLog {
             .current_dir(&self.workdir)
             .arg("--newversion")
             .arg(newversion)
-            .arg(message)
+            .arg(message.to_string())
             .status()
             .expect("unable to import orig");
     }
