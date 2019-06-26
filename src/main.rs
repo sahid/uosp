@@ -14,6 +14,8 @@ use clap::{App, AppSettings, Arg, SubCommand};
 use uosp::*;
 
 const OS_MASTER: &'static str = "train";
+const KIND_OPENSTACK: &'static str = "openstack";
+const KIND_REGULAR: &'static str = "regular";
 
 fn get_current_dir() -> std::path::PathBuf {
     std::env::current_dir().unwrap()
@@ -29,10 +31,11 @@ fn uppercase_first_letter(s: &str) -> String {
 }
 
 /// Rebases a package to a new upstream version
-fn rebase(name: &str, version: &str, release: Option<&str>, bugid: Option<&str>, no_os: bool) -> Result<()> {
+fn rebase(name: &str, version: &str, release: &str,
+          bugid: Option<&str>, kind: &str, dist: &str) -> Result<()> {
     println!("Rebasing {} {} to new upstream version '{}'...",
-             name, release.unwrap_or("master"), version);
-    let release = release.unwrap_or("master");
+             name, release, version);
+
     let workdir = get_current_dir();
     let branch = Package::format_branch(release);
 
@@ -49,7 +52,9 @@ fn rebase(name: &str, version: &str, release: Option<&str>, bugid: Option<&str>,
     pkg.apply_tarball(version, &archive)?;
 
     let chg = &pkg.changelog;
-    let msg = if !no_os {
+    // TODO(sahid): Need to move all of that in changelog, the method
+    // whould be something like: chg.new_release(version, message, dist, kind)
+    let msg = if kind == KIND_OPENSTACK {
         let formated_name = if release != "master" {
             uppercase_first_letter(release)
         } else {
@@ -62,6 +67,7 @@ fn rebase(name: &str, version: &str, release: Option<&str>, bugid: Option<&str>,
             ChangeLogMessage::OSNewUpstreamRelease(formated_name)
         }
     } else {
+        // Assumes KIND_REGULAR
         ChangeLogMessage::NewUpstreamRelease(version.to_string())
     };
     chg.new_release(version, msg);
@@ -182,10 +188,11 @@ fn cli() -> std::result::Result<(), ()> {
                         using gbp import-orig. Finally update the d/changelog and commit \
                         the all in git repo.")
                 .arg(Arg::with_name("project")
+                     .value_name("PACKAGE")
                      .help("The package name. (e.g. nova).")
                      .required(true))
                 .arg(Arg::with_name("version")
-                     //.short("v").long("version").takes_value(true)
+                     .value_name("VERSION")
                      .help("Openstack version to rebase on. (e.g. 19.0.1).")
                      .required(true))
                 .arg(Arg::with_name("release")
@@ -193,15 +200,23 @@ fn cli() -> std::result::Result<(), ()> {
                      .help("Openstack release name. (e.g. stein). \
                             Default will be to consider to use the in-progress \
                             release 'master'.")
+                     .default_value("master")
                      .required(false))
                 .arg(Arg::with_name("bugid")
                      .short("b").long("bugid").takes_value(true)
                      .help("Launchpad bug ID associated to the rebase (e.g: 123456).")
                      .required(false))
-                .arg(Arg::with_name("no-os")
-                     .short("n").long("no-os")
-                     .help("Whether the project is an OpenStack package. This will help \
-                            to determine changelog message.")
+                .arg(Arg::with_name("kind")
+                     .short("k").long("kind").takes_value(true)
+                     .default_value("openstack").possible_values(&["openstack", "regular"])
+                     .help("Indicate what kind of package it is, this help determining \
+                            version and change log message.")
+                     .required(false))
+                .arg(Arg::with_name("dist")
+                     .short("d").long("dist").takes_value(true)
+                     .default_value("ubuntu").possible_values(&["ubuntu", "debian"])
+                     .help("Indicate the distribution for this package, this help determining \
+                            version and change log message.")
                      .required(false)))
         .subcommand(
             SubCommand::with_name("snapshot")
@@ -273,9 +288,10 @@ fn cli() -> std::result::Result<(), ()> {
     if let Some(matches) = matches.subcommand_matches("rebase") {
         ret = rebase(matches.value_of("project").unwrap(),
                      matches.value_of("version").unwrap(),
-                     matches.value_of("release"),
+                     matches.value_of("release").unwrap(),
                      matches.value_of("bugid"),
-                     matches.is_present("no-os"));
+                     matches.value_of("kind").unwrap(),
+                     matches.value_of("dist").unwrap());
     } else if let Some(matches) = matches.subcommand_matches("build") {
         ret = build(matches.value_of("project").unwrap());
     } else if let Some(matches) = matches.subcommand_matches("snapshot") {
