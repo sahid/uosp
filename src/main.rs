@@ -138,11 +138,13 @@ fn clone(name: &str) -> Result<()> {
     Ok(())
 }
 
-fn publish(name: &str, ppa: &str, serie: &str, fake: bool) -> Result<()> {
+fn publish(name: &str, ppa: &str, serie: &str, fake: bool, build: bool) -> Result<()> {
     println!("Backport {} to '{}', ubuntu {}, fake-time: {:?}...", name, ppa, serie, fake);
 
     let pkg = Package::clone(name, get_current_dir())?;
-    pkg.build()?;
+    if !build {
+        pkg.build()?;
+    }
     pkg.publish(ppa, serie, true);
 
     Ok(())
@@ -234,7 +236,11 @@ fn cli() -> std::result::Result<(), ()> {
                 .arg(Arg::with_name("serie")
                      //.short("s").long("serie").takes_value(true)
                      .help("Ubuntu serie used to build package. (e.g. eoan)")
-                     .required(true)))
+                     .required(true))
+                .arg(Arg::with_name("build")
+                     .short("b").long("build")
+                     .help("Execute package build before publishing.")
+                     .required(false)))
                 /*
                 .arg(Arg::with_name("fake")
                      .help("Use fake timestamp.")
@@ -278,7 +284,8 @@ fn cli() -> std::result::Result<(), ()> {
         ret = publish(matches.value_of("project").unwrap(),
                       matches.value_of("ppa").unwrap(),
                       matches.value_of("serie").unwrap(),
-                      /*matches.value_of("fake").unwrap()*/ true);
+                      /*matches.value_of("fake").unwrap()*/ true,
+                      matches.is_present("build"));
     } else if let Some(matches) = matches.subcommand_matches("clone") {
         ret = clone(matches.value_of("project").unwrap());
     } else if let Some(matches) = matches.subcommand_matches("debpull") {
