@@ -4,8 +4,11 @@
 
 //! # Ubuntu OpenStack Package
 //!
-//! Collection of CLI commands helping managing Ubuntu OpenStack
-//! packages.
+//! Collection of commands helping managing Ubuntu OpenStack packages.
+//!
+//! Most of them are actually wrapper until to write everything in
+//! pure Rust. You may need to install lot of dependencies.
+
 
 #[macro_use]
 extern crate clap;
