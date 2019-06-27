@@ -3,12 +3,13 @@ name = "uosp"
 version = "0.1.0"
 authors = ["Sahid Orentino Ferdjaoui <sahid.ferdjaoui@canonical.com>"]
 edition = "2018"
+description = "Collection of commands helping managing Ubuntu OpenStack packages."
 
 [[bin]]
 name = "uosp"
 
 [dependencies]
-changelog = { path = "changelog" }
-git = { path = "git" }
+changelog = { path = "changelog", version = "0.1.0" }
+git = { path = "git", version = "0.1.0" }
 
 clap = "*"

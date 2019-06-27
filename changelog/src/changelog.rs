@@ -73,7 +73,7 @@ impl Version {
     }
 
     pub fn incr_major(&self) -> Result<()> {
-        
+        Ok(())
     }
 }
 
