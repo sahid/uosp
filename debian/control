@@ -1,0 +1,32 @@
+Source: uosp
+Section: rust
+Priority: optional
+Build-Depends:
+ debhelper (>= 11),
+ dh-cargo (>= 15),
+ cargo:native <!nocheck>,
+ rustc:native <!nocheck>,
+ libstd-rust-dev <!nocheck>,
+ librust-clap+ansi-term-dev (>= 2.27.1),
+ librust-clap+atty-dev (>= 2.27.1),
+ librust-clap+color-dev (>= 2.27.1),
+ librust-clap+default-dev (>= 2.27.1),
+ librust-clap+strsim-dev (>= 2.27.1),
+ librust-clap+suggestions-dev (>= 2.27.1),
+ librust-clap+term-size-dev (>= 2.27.1),
+ librust-clap+vec-map-dev (>= 2.27.1),
+ librust-clap-dev (>= 2.27.1)
+Maintainer: Sahid Orentino Ferdjaoui <sahid.ferdjaoui@canonical.com>
+Standards-Version: 4.2.0
+Vcs-Git: https://github.com/sahid/uosp.git
+Vcs-Browser: https://github.com/sahid/uosp
+
+Package: uosp
+Architecture: any
+Depends:
+ ${misc:Depends},
+ devscripts (>= 2.19.4),
+ openstack-pkg-tools (>= 89ubuntu1),
+ ubuntu-dev-tools (>= 0.166)
+Description:
+ Collection of commands helping managing Ubuntu OpenStack packages.

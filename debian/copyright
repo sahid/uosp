@@ -1,0 +1,11 @@
+Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: uosp
+Source: https://github.com/sahid/uosphttps://github.com/openstack/aodh
+
+Files: *
+Copyright: 2019 Canonical Ltd.
+License: BSD-3-clause
+
+Files: debian/*
+Copyright: 2019 Canonical Ltd.
+License: LGPL-3.0
