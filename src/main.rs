@@ -34,8 +34,15 @@ fn uppercase_first_letter(s: &str) -> String {
 }
 
 /// Rebases a package to a new upstream version
-fn rebase(name: &str, version: &str, release: &str,
-          bugid: Option<&str>, kind: &str, dist: &str) -> Result<()> {
+///
+/// The process is to create point release based on the last version
+/// published upstream. Running this command will clone project name
+/// using package VCS (see: --git-url <URL> if VCS not right). Using
+/// uscan to download tarball of the proposed version and import it
+/// using gbpimport-orig. Finally update the d/changelog and commit
+/// the all in git repo.
+fn rebase(name: &str, version: &str, release: &str, bugid: Option<&str>,
+          kind: &str, dist: &str) -> Result<()> {
     println!("Rebasing {} {} to new upstream version '{}'...",
              name, release, version);
 
@@ -183,13 +190,7 @@ fn cli() -> std::result::Result<(), ()> {
         .setting(AppSettings::ColoredHelp)
         .subcommand(
             SubCommand::with_name("rebase")
-                .about("Rebase package to a new upstream release. \n\n\
-                        The process is to create point release based on the last version \
-                        published upstream. Running this command will clone project name \
-                        using package VCS (see: --git-url <URL> if VCS not right). Using \
-                        uscan to download tarball of the proposed version and import it \
-                        using gbp import-orig. Finally update the d/changelog and commit \
-                        the all in git repo.")
+                .about("Rebase package to a new upstream release.")
                 .arg(Arg::with_name("project")
                      .value_name("PACKAGE")
                      .help("The package name. (e.g. nova).")
