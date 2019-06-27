@@ -80,14 +80,6 @@ impl Display for GitCloneUrl {
     }
 }
 
-pub trait GitClone {
-    fn clone(name: &str, rootdir: PathBuf) -> Result<Git>;
-}
-
-pub struct VCSGit;
-
-pub struct Github;
-
 impl Git {
     pub fn new(name: &str, rootdir: PathBuf, url: GitCloneUrl) -> Result<Git> {
         let mut workdir = rootdir.clone();
