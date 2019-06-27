@@ -2,13 +2,13 @@
 // of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-pub mod git;
+extern crate git;
 
 use std::fmt::{self, Display};
 use std::path::PathBuf;
 use std::process::Command;
 
-use crate::git::{Git, Github, VCSGit, GitClone};
+use crate::git::{Git, GitCloneUrl};
 
 static GIT_STABLE_BRANCH: &'static str = "stable";
 
@@ -80,11 +80,18 @@ impl Package {
         }
     }
 
-    /// Returns a `Package` after to have cloned its repository
-    pub fn clone(name: &str, rootdir: PathBuf) -> Result<Package> {
+    /// Returns a `Package` after to have cloned its repository.
+    ///
+    /// By default project will be cloned using ``
+    pub fn clone(name: &str, rootdir: PathBuf, kind: &str, dist: &str) -> Result<Package> {
         let mut pkg = Package::new(name, rootdir);
-        pkg.git = Some(VCSGit::clone(
-            &pkg.name, pkg.rootdir.clone())?);
+        let url = if dist == "ubuntu" {
+            GitCloneUrl::UbuntuServerDev(name.to_string())
+        } else {
+            GitCloneUrl::VCSGit
+        };
+        pkg.git = Some(Git::new(
+            &pkg.name, pkg.rootdir.clone(), url)?);
         Ok(pkg)
     }
 
@@ -162,7 +169,8 @@ impl Package {
             &self.name
         };
 
-        let gitupstream = Github::clone(nameup, rootdir)?;
+        let gitupstream = Git::new(
+            nameup, rootdir, GitCloneUrl::OpenStackUpstream(nameup.to_string()))?;
         gitupstream.checkout(&branch)?;
         gitupstream.update()?;
         Command::new("pkgos-generate-snapshot")

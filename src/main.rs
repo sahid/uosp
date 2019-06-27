@@ -49,7 +49,7 @@ fn rebase(name: &str, version: &str, release: &str, bugid: Option<&str>,
     let workdir = get_current_dir();
     let branch = Package::format_branch(release);
 
-    let pkg = Package::clone(name, workdir.clone())?;
+    let pkg = Package::clone(name, workdir.clone(), kind, dist)?;
 
     let git = pkg.git.as_ref().unwrap();
     git.checkout("pristine-tar")?;
@@ -95,7 +95,7 @@ fn snapshot(name: &str, version: &str, upstream: Option<&str>) -> Result<()> {
     let release = "master";
     let workdir = get_current_dir();
     let branch = Package::format_branch(release);
-    let pkg = Package::clone(name, workdir.clone())?;
+    let pkg = Package::clone(name, workdir.clone(), "openstack", "ubuntu")?;
 
     let git = pkg.git.as_ref().unwrap();
     git.checkout("pristine-tar")?;
@@ -141,7 +141,7 @@ fn build(name: &str) -> Result<()> {
 fn clone(name: &str) -> Result<()> {
     println!("Cloning package '{}'...", name);
 
-    let pkg = Package::clone(name, get_current_dir())?;
+    let pkg = Package::clone(name, get_current_dir(), "openstack", "ubuntu")?;
 
     let git = pkg.git.as_ref().unwrap();
     git.checkout("pristine-tar")?;
@@ -154,7 +154,7 @@ fn clone(name: &str) -> Result<()> {
 fn publish(name: &str, ppa: &str, serie: &str, fake: bool, build: bool) -> Result<()> {
     println!("Backport {} to '{}', ubuntu {}, fake-time: {:?}...", name, ppa, serie, fake);
 
-    let pkg = Package::clone(name, get_current_dir())?;
+    let pkg = Package::clone(name, get_current_dir(), "openstack", "ubuntu")?;
     if !build {
         pkg.build()?;
     }
@@ -173,7 +173,7 @@ fn debpull(project: &str) -> Result<()> {
 fn pushlp(name: &str, account: &str) -> Result<()> {
     println!("Push package '{}' on lp:{}...", name, account);
 
-    let pkg = Package::clone(name, get_current_dir())?;
+    let pkg = Package::clone(name, get_current_dir(), "openstack", "ubuntu")?;
     let url = format!("git+ssh://{}@git.launchpad.net/~{}/ubuntu/+source/{}",
                       account, account, name);
     pkg.git.as_ref().unwrap().push(&url)?;

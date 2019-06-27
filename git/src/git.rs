@@ -2,10 +2,14 @@
 // of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+//! Simple Git lib to handle actions in package repository.
+//!
+//! Most of the actions are wrapping git commands. It would be great
+//! to avoid doing that in future.
+
 use std::fmt::{self, Display};
 use std::path::PathBuf;
 use std::process::Command;
-
 
 #[derive(Debug)]
 pub enum Error {
@@ -18,7 +22,6 @@ pub enum Error {
     HashError(),
     Fatal(String),
 }
-
 
 impl Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -49,6 +52,34 @@ pub struct Git {
     pub workdir: PathBuf,
 }
 
+#[derive(Debug, PartialEq)]
+pub enum GitCloneUrl {
+    OpenStackUpstream(String),
+    UbuntuServerDev(String),
+    GitHub(String),
+    Salsa(String),
+    Plain(String),
+    VCSGit,
+}
+
+impl Display for GitCloneUrl {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        use self::GitCloneUrl::*;
+        match self {
+            OpenStackUpstream(s) => write!(f, "https://github.com/openstack/{}.git", s),
+            UbuntuServerDev(s) => write!(
+                f,
+                "https://git.launchpad.net/~ubuntu-server-dev/ubuntu/+source/{}",
+                s
+            ),
+            GitHub(s) => write!(f, "https://github.com/{}.git", s),
+            Salsa(s) => write!(f, "https://salsa.debian.org/{}.git", s),
+            Plain(s) => write!(f, "{}", s),
+            VCSGit => Ok(()),
+        }
+    }
+}
+
 pub trait GitClone {
     fn clone(name: &str, rootdir: PathBuf) -> Result<Git>;
 }
@@ -58,16 +89,37 @@ pub struct VCSGit;
 pub struct Github;
 
 impl Git {
-    pub fn new(workdir: PathBuf) -> Git {
-        Git {
-            workdir: workdir
+    pub fn new(name: &str, rootdir: PathBuf, url: GitCloneUrl) -> Result<Git> {
+        let mut workdir = rootdir.clone();
+        workdir.push(name);
+        let git = Git { workdir: workdir };
+        if !git.exists() {
+            Command::new("mkdir").arg("-p").arg(&rootdir).status()?;
+
+            let o = if url == GitCloneUrl::VCSGit {
+                Command::new("gbp")
+                    .current_dir(&rootdir)
+                    .arg("clone")
+                    .arg(format!("vcsgit:{}", name))
+                    .status()?
+            } else {
+                Command::new("git")
+                    .current_dir(&rootdir)
+                    .arg("clone")
+                    .arg(url.to_string())
+                    .status()?
+            };
+            if !o.success() {
+                return Err(Error::CloneError(name.to_string()));
+            }
         }
+        Ok(git)
     }
 
     pub fn exists(&self) -> bool {
         self.workdir.exists()
     }
-    
+
     pub fn checkout(&self, branch: &str) -> Result<()> {
         let o = Command::new("git")
             .current_dir(&self.workdir)
@@ -75,8 +127,7 @@ impl Git {
             .arg(branch)
             .status()?;
         if !o.success() {
-            return Err(Error::CheckoutError(
-                branch.to_string()));
+            return Err(Error::CheckoutError(branch.to_string()));
         }
         Ok(())
     }
@@ -139,53 +190,5 @@ impl Git {
             return Err(Error::HashError());
         }
         Ok(String::from_utf8(o.stdout).unwrap().trim().to_string())
-    }
-}
-
-// TODO(sahid): I don"t realy like VCSGit an Github, they look too
-// similar...
-
-impl GitClone for VCSGit {
-    fn clone(name: &str, rootdir: PathBuf) -> Result<Git> {
-        let mut workdir = rootdir.clone();
-        workdir.push(name);
-        let git = Git {
-            workdir: workdir,
-        };
-        if !git.exists() {
-            Command::new("mkdir").arg("-p").arg(&rootdir).status()?;
-            let o = Command::new("gbp")
-                .current_dir(&rootdir)
-                .arg("clone")
-                .arg(format!("vcsgit:{}", name))
-                .status()?;
-            if !o.success() {
-                return Err(Error::CloneError(name.to_string()));
-            }
-        }
-        Ok(git)
-    }
-}
-
-impl GitClone for Github {
-    fn clone(name: &str, rootdir: PathBuf) -> Result<Git> {
-        let mut workdir = rootdir.clone();
-        workdir.push(name);
-        let git = Git {
-            workdir: workdir,
-        };
-        if !git.exists() {
-            Command::new("mkdir").arg("-p").arg(&rootdir).status()?;
-            let o = Command::new("git")
-                .current_dir(&rootdir)
-                .arg("clone")
-                .arg(format!("https://github.com/openstack/{}", name))
-                //.arg(format!("https://github.com/mfcloud/{}", name))
-                .output()?;
-            if !o.status.success() {
-                return Err(Error::CloneError(name.to_string()));
-            }
-        }
-        Ok(git)
     }
 }

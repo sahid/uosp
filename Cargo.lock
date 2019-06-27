@@ -35,6 +35,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "git"
+version = "0.1.0"
+
+[[package]]
 name = "libc"
 version = "0.2.58"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -91,6 +95,7 @@ name = "uosp"
 version = "0.1.0"
 dependencies = [
  "clap 2.27.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "git 0.1.0",
 ]
 
 [[package]]

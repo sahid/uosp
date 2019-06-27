@@ -1,13 +1,10 @@
 [package]
-name = "uosp"
+name = "git"
 version = "0.1.0"
 authors = ["Sahid Orentino Ferdjaoui <sahid.ferdjaoui@canonical.com>"]
 edition = "2018"
 
-[[bin]]
-name = "uosp"
+[lib]
+path = "src/git.rs"
 
 [dependencies]
-git = { path = "git" }
-
-clap = "*"
