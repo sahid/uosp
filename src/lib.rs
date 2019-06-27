@@ -46,7 +46,6 @@ impl From<git::Error> for Error {
     }
 }
 
-
 // Let's try to be a bit more concise
 pub type Result<T> = std::result::Result<T, Error>;
 
@@ -65,9 +64,7 @@ impl Package {
         // I should refer gbp.conf
         let mut builddir = rootdir.clone();
         builddir.push("build-area");
-        Command::new("mkdir").arg("-p")
-            .arg(builddir)
-            .status();
+        Command::new("mkdir").arg("-p").arg(builddir).status();
 
         let mut workdir = rootdir.clone();
         workdir.push(name);
@@ -90,8 +87,7 @@ impl Package {
         } else {
             GitCloneUrl::VCSGit
         };
-        pkg.git = Some(Git::new(
-            &pkg.name, pkg.rootdir.clone(), url)?);
+        pkg.git = Some(Git::new(&pkg.name, pkg.rootdir.clone(), url)?);
         Ok(pkg)
     }
 
@@ -156,7 +152,12 @@ impl Package {
     /// Downloads upstream release, then use pkos-generate-snapshot to
     /// create tarball. This function returns a githash as tarball
     /// identifier.
-    pub fn generate_snapshot(&self, release: &str, version: &str, upstream: Option<&str>) -> Result<String> {
+    pub fn generate_snapshot(
+        &self,
+        release: &str,
+        version: &str,
+        upstream: Option<&str>,
+    ) -> Result<String> {
         let branch = Self::format_branch(release);
 
         // rootdir for the upstream source is './t'.
@@ -170,7 +171,10 @@ impl Package {
         };
 
         let gitupstream = Git::new(
-            nameup, rootdir, GitCloneUrl::OpenStackUpstream(nameup.to_string()))?;
+            nameup,
+            rootdir,
+            GitCloneUrl::OpenStackUpstream(nameup.to_string()),
+        )?;
         gitupstream.checkout(&branch)?;
         gitupstream.update()?;
         Command::new("pkgos-generate-snapshot")
@@ -186,7 +190,11 @@ impl Package {
             .arg("-c")
             .arg(format!(
                 "mv ~/tarballs/{}_*.orig.tar.gz {}/{}_{}.orig.tar.gz",
-                nameup, self.rootdir.to_str().unwrap(), nameup, gitversion))
+                nameup,
+                self.rootdir.to_str().unwrap(),
+                nameup,
+                gitversion
+            ))
             .status()?;
 
         Ok(githash)
@@ -197,7 +205,8 @@ impl Package {
         let o = Command::new("date")
             .current_dir(&self.workdir)
             .arg("+%Y%m%d%H")
-            .output().expect("unable to generate date");
+            .output()
+            .expect("unable to generate date");
         let date = String::from_utf8(o.stdout).unwrap().trim().to_string();
 
         format!("{}~git{}.{}", version, date, githash)
@@ -207,24 +216,25 @@ impl Package {
     pub fn publish(&self, ppa: &str, serie: &str, fake: bool) -> Result<()> {
         let version = self.changelog.get_head_version().unwrap();
         // Really ugly...
-        let o = Command::new("date")
-            .arg("+%Y%m%d%H%M")
-            .output()?;
+        let o = Command::new("date").arg("+%Y%m%d%H%M").output()?;
         let date = String::from_utf8(o.stdout).unwrap().trim().to_string();
 
         //manila_9.0.0~b1~git2019061715.86823b5c-0ubuntu1.dsc
         Command::new("backportpackage")
             .current_dir(&self.rootdir)
-            .arg("-S").arg(format!("~ppa{}", &date))
-            .arg("-u").arg(ppa)
-            .arg("-d").arg(serie)
-        // we should refer d/gbp.conf
-            .arg("-y").arg(format!("build-area/{}_{}.dsc", &self.name, &version))
+            .arg("-S")
+            .arg(format!("~ppa{}", &date))
+            .arg("-u")
+            .arg(ppa)
+            .arg("-d")
+            .arg(serie)
+            // we should refer d/gbp.conf
+            .arg("-y")
+            .arg(format!("build-area/{}_{}.dsc", &self.name, &version))
             .status()?;
         Ok(())
     }
 }
-
 
 pub enum ChangeLogMessage {
     OSNewUpstreamRelease(String),
@@ -237,18 +247,17 @@ impl Display for ChangeLogMessage {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         use self::ChangeLogMessage::*;
         match self {
-            OSNewUpstreamRelease(s) => write!(
-                f, "New upstream release for OpenStack {}.", s),
-            OSNewUpstreamReleaseWithBug(s, b) => write!(
-                f, "New upstream release for OpenStack {}. (LP# {}).", s, b),
-            NewUpstreamRelease(s) => write!(
-                f, "New upstream release for OpenStack {}.", s),
-            NewUpstreamReleaseWithBug(s, b) => write!(
-                f, "New upstream release {}. (LP# {}).", s, b),
+            OSNewUpstreamRelease(s) => write!(f, "New upstream release for OpenStack {}.", s),
+            OSNewUpstreamReleaseWithBug(s, b) => {
+                write!(f, "New upstream release for OpenStack {}. (LP# {}).", s, b)
+            }
+            NewUpstreamRelease(s) => write!(f, "New upstream release for OpenStack {}.", s),
+            NewUpstreamReleaseWithBug(s, b) => {
+                write!(f, "New upstream release {}. (LP# {}).", s, b)
+            }
         }
     }
 }
-
 
 pub struct ChangeLog {
     pub workdir: PathBuf,
@@ -256,9 +265,7 @@ pub struct ChangeLog {
 
 impl ChangeLog {
     pub fn new(workdir: PathBuf) -> ChangeLog {
-        ChangeLog {
-            workdir: workdir,
-        }
+        ChangeLog { workdir: workdir }
     }
 
     pub fn get_head_full_version(&self) -> String {
@@ -276,7 +283,7 @@ impl ChangeLog {
         let vec: Vec<&str> = ver.split(":").collect();
         match vec[0].parse::<u32>() {
             Ok(v) => Some(v),
-            Err(_) => None
+            Err(_) => None,
         }
     }
 
@@ -286,10 +293,10 @@ impl ChangeLog {
         if vec.len() > 1 {
             match vec[1].parse::<String>() {
                 Ok(v) => return Some(v),
-                Err(_) => return None
+                Err(_) => return None,
             }
         }
-        return Some(ver)
+        return Some(ver);
     }
 
     pub fn new_release(&self, version: &str, message: ChangeLogMessage) {
