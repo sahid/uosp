@@ -11,6 +11,72 @@ use std::fmt::{self, Display};
 use std::path::PathBuf;
 use std::process::Command;
 
+#[derive(Debug)]
+pub enum Error {
+    // TODO(sahid): need to handle all the errors
+    VersionError(String),
+}
+
+impl Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        use self::Error::*;
+        match self {
+            VersionError(s) => write!(f, "unable to parse version: {}", s),
+        }
+    }
+}
+
+// Let's try to be a bit more concise
+pub type Result<T> = std::result::Result<T, Error>;
+
+
+/// Simple data structure to handle some operations arround versioning
+/// [epoch:]<upstream>-[package]
+pub struct Version(Option<u8>, String, String);
+
+impl From<&str> for Version {
+    fn from(value: &str) -> Self {
+        Version(Self::extract_epoch(value).unwrap(),
+                Self::extract_upstream(value).unwrap(),
+                Self::extract_package(value).unwrap())
+    }
+}
+
+impl Version {
+    fn extract_epoch(value: &str) -> Result<Option<u8>> {
+        let vec: Vec<&str> = value.split(":").collect();
+        match vec[0].parse::<u8>() {
+            Ok(v) => Ok(Some(v)),
+            Err(_) => Ok(None)
+        }
+    }
+
+    fn extract_upstream(value: &str) -> Result<String> {
+        let vec: Vec<&str> = value.split(":").collect();
+        let idx = if !Self::extract_epoch(value).is_ok() {
+            0
+        } else {
+            1
+        };
+        match vec[idx].parse::<String>() {
+            Ok(v) => Ok(v),
+            Err(s) => Err(Error::VersionError(s.to_string()))
+        }
+    }
+
+    fn extract_package(value: &str) -> Result<String> {
+        let vec: Vec<&str> = value.split("-").collect();
+        match vec[1].parse::<String>() {
+            Ok(v) => Ok(v),
+            Err(s) => Err(Error::VersionError(s.to_string()))
+        }
+    }
+
+    pub fn incr_major(&self) -> Result<()> {
+        
+    }
+}
+
 pub enum ChangeLogMessage {
     OSNewUpstreamRelease(String),
     OSNewUpstreamReleaseWithBug(String, String),
