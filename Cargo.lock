@@ -21,6 +21,10 @@ version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
+name = "changelog"
+version = "0.1.0"
+
+[[package]]
 name = "clap"
 version = "2.27.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -94,6 +98,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 name = "uosp"
 version = "0.1.0"
 dependencies = [
+ "changelog 0.1.0",
  "clap 2.27.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "git 0.1.0",
 ]

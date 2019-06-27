@@ -1,14 +1,10 @@
 [package]
-name = "uosp"
+name = "changelog"
 version = "0.1.0"
 authors = ["Sahid Orentino Ferdjaoui <sahid.ferdjaoui@canonical.com>"]
 edition = "2018"
 
-[[bin]]
-name = "uosp"
+[lib]
+path = "src/changelog.rs"
 
 [dependencies]
-changelog = { path = "changelog" }
-git = { path = "git" }
-
-clap = "*"

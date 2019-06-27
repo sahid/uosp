@@ -12,6 +12,9 @@
 #[macro_use]
 extern crate clap;
 
+extern crate changelog;
+
+use changelog::ChangeLogMessage;
 use clap::{App, AppSettings, Arg, SubCommand};
 use uosp::*;
 
