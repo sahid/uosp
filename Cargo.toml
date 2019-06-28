@@ -12,4 +12,4 @@ name = "uosp"
 changelog = { path = "changelog", version = "0.1.0" }
 git = { path = "git", version = "0.1.0" }
 
-clap = "*"
+clap = ">= 2.27.1"
