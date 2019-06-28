@@ -27,6 +27,7 @@ Depends:
  ${misc:Depends},
  devscripts (>= 2.19.4),
  openstack-pkg-tools (>= 89ubuntu1),
- ubuntu-dev-tools (>= 0.166)
+ ubuntu-dev-tools (>= 0.166),
+ apache2-dev (>= 2.4.38-2ubuntu2)
 Description:
  Collection of commands helping managing Ubuntu OpenStack packages.
