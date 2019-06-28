@@ -4,6 +4,12 @@ version = "0.1.0"
 authors = ["Sahid Orentino Ferdjaoui <sahid.ferdjaoui@canonical.com>"]
 edition = "2018"
 description = "Collection of commands helping managing Ubuntu OpenStack packages."
+documentation = "https://github.com/sahid/uosp"
+homepage = "https://github.com/sahid/uosp"
+repository = "https://github.com/sahid/uosp.git"
+readme = "README"
+license = "BSD-3-Clause"
+license-file = "LICENSE"
 
 [[bin]]
 name = "uosp"
