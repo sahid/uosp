@@ -8,7 +8,6 @@ documentation = "https://github.com/sahid/uosp"
 homepage = "https://github.com/sahid/uosp"
 repository = "https://github.com/sahid/uosp.git"
 readme = "README"
-license = "BSD-3-Clause"
 license-file = "LICENSE"
 
 [[bin]]
