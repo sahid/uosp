@@ -1,9 +1,11 @@
-# Collection of commands helping managing Ubuntu OpenStack packages.
+# Ubuntu OpenStack Packaging (uosp)
+
+Collection of commands helping managing Ubuntu OpenStack packages.
 
 ## Important considerations
 
 Most of them are actually wrapper until to write everything in pure
-Rust. *You may need to install lot of dependencies.*
+Rust. *You may need to install dependencies.*
 
 see: debian/control
 
@@ -11,7 +13,7 @@ see: debian/control
  devscripts (>= 2.19.4),
  openstack-pkg-tools (>= 89ubuntu1),
  ubuntu-dev-tools (>= 0.166)
- apache2-dev (>= 2.4.38-2ubuntu2)
+ apache2-dev (>= 2.4.38-2ubuntu2) # dh-apache2
 ```
 
 About the debian package, since librust-clap-dev is only available
@@ -44,11 +46,12 @@ SUBCOMMANDS:
 
 ## Tests/Exercises
 
-Not a lot, there are comming time to time but feele free to help :)
+Not a lot unfortunately, there are comming time to time but feel free
+to help :)
 
 ## Getting Started
 
-First be sure to have well cconfigured git, devscripts and gpg to sign
+First, be sure to have well configured git, devscripts and gpg to sign
 packages.
 
 ```
@@ -73,9 +76,9 @@ $ git config --global user.email "sahid.ferdjaoui@canonical.com"
 $ git config --global user.name "Sahid Orentino Ferdjaoui"
 ```
 
-The project is under developpement so no official relase is
-available. You can build the project based on the sources and cargo or
-consider using the ubuntu packages daily generated.
+The project is under development so no official releases are
+available. You can build the project based on the sources or consider
+using the PPA which generates daily packages.
 
 ### From source:
 
