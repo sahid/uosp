@@ -1,0 +1,21 @@
+name: uosp
+base: core18
+version: '0.1'
+summary: Collection of commands helping managing Ubuntu OpenStack packages. # 79 char long summary
+description: |
+  This is a collection of commands helping managing Ubuntu OpenStack packages.
+license: BSD-3-Clause
+grade: stable
+confinement: strict
+
+parts:
+  uosp:
+    plugin: rust
+    source: .
+
+apps:
+  uosp:
+    adapter: none
+    command: ./bin/uosp
+    plugs:
+    - home
