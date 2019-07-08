@@ -8,6 +8,7 @@
 //! to avoid doing that in future.
 
 use std::fmt::{self, Display};
+use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
 
@@ -198,15 +199,13 @@ impl Git {
     }
 
     pub fn get_hash(&self) -> Result<String> {
-        let o = Command::new("git")
-            .current_dir(&self.workdir)
-            .arg("rev-parse")
-            .arg("--short")
-            .arg("HEAD")
-            .output()?;
-        if !o.status.success() {
-            return Err(Error::HashError());
+        let head = fs::read_to_string(format!("{}/.git/HEAD", &self.workdir.display()))?;
+        match head.split(' ').nth(0) {
+            Some(h) => {
+                let rev = fs::read_to_string(format!("{}/.git/{}", self.workdir.display(), h))?;
+                Ok(rev.chars().take(7).collect())
+            },
+            None => Err(Error::HashError())
         }
-        Ok(String::from_utf8(o.stdout).unwrap().trim().to_string())
     }
 }

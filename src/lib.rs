@@ -6,7 +6,8 @@ extern crate changelog;
 extern crate git;
 
 use std::fmt::{self, Display};
-use std::path::{Path, PathBuf};
+use std::fs;
+use std::path::PathBuf;
 use std::process::Command;
 
 use changelog::ChangeLog;
@@ -61,29 +62,29 @@ pub struct Package {
 
 impl Package {
     // TODO(sahid): This should probably return a Result<Package>
-    pub fn new(name: &str, rootdir: PathBuf) -> Package {
+    pub fn new(name: &str, rootdir: PathBuf) -> Result<Package> {
         // TODO(sahid): Do we really need this here?
         // I should refer gbp.conf
         let mut builddir = rootdir.clone();
         builddir.push("build-area");
-        Command::new("mkdir").arg("-p").arg(builddir).status();
+        fs::create_dir_all(builddir)?;
 
         let mut workdir = rootdir.clone();
         workdir.push(name);
-        Package {
+        Ok(Package {
             name: name.to_string(),
             rootdir: rootdir,
             workdir: workdir.clone(),
             changelog: ChangeLog::new(workdir.clone()),
             git: None,
-        }
+        })
     }
 
     /// Returns a `Package` after to have cloned its repository.
     ///
     /// By default project will be cloned using ``
     pub fn clone(name: &str, rootdir: PathBuf, kind: &str, dist: &str) -> Result<Package> {
-        let mut pkg = Package::new(name, rootdir);
+        let mut pkg = Package::new(name, rootdir)?;
         let url = if dist == "ubuntu" {
             GitCloneUrl::UbuntuServerDev(name.to_string())
         } else {
@@ -188,17 +189,13 @@ impl Package {
 
         // The tarball generated is located in '~/tarballs', so let's
         // move it in the package rootdir.
-        Command::new("/bin/sh")
-            .arg("-c")
-            .arg(format!(
-                "mv ~/tarballs/{}_*.orig.tar.gz {}/{}_{}.orig.tar.gz",
-                nameup,
+        fs::rename(
+            format!("~/tarballs/{}_*.orig.tar.gz", nameup),
+            format!("{}/{}_{}.orig.tar.gz",
                 self.rootdir.to_str().unwrap(),
                 nameup,
-                gitversion
-            ))
-            .status()?;
-
+                gitversion),
+            )?;
         Ok(githash)
     }
 
