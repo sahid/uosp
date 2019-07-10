@@ -6,7 +6,7 @@ extern crate changelog;
 extern crate git;
 
 use std::fmt::{self, Display};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 
 use changelog::ChangeLog;

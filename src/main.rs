@@ -138,6 +138,33 @@ fn snapshot(name: &str, version: &str, upstream: Option<&str>) -> Result<()> {
     Ok(())
 }
 
+fn debdiff(name: &str, release: &str, patch: &str, upstream: Option<&str>) -> Result<()> {
+    let workdir = get_current_dir();
+    let branch = Package::format_branch(release);
+
+    let pkg = Package::clone(name, workdir.clone(), "openstack", "ubuntu")?;
+
+    let git = pkg.git.as_ref().unwrap();
+    git.checkout("pristine-tar")?;
+    git.checkout("upstream")?;
+    git.checkout(&branch)?;
+
+    if patch.starts_with("http") {
+        // webpatch
+        git.apply_from_url(patch)?;
+    } else {
+        // localpatch
+        let mut file = std::path::PathBuf::from(get_current_dir());
+        file.push(patch);
+        git.apply_from_file(file)?;
+    }
+
+    git.debcommit()?;
+    git.show()?;
+
+    Ok(())
+}
+
 /// Builds a package.
 fn build(name: &str) -> Result<()> {
     println!("Building {}...", name);
@@ -289,6 +316,41 @@ fn cli() -> std::result::Result<(), ()> {
                 ),
         )
         .subcommand(
+            SubCommand::with_name("debdiff")
+                .about("Apply debdiff to a package.")
+                .arg(
+                    Arg::with_name("project")
+                        .help("Openstack package name. (e.g. nova).")
+                        .required(true),
+                )
+                .arg(
+                    Arg::with_name("release")
+                        .short("r")
+                        .long("release")
+                        .takes_value(true)
+                        .help(
+                            "Openstack release name. (e.g. stein). \
+                             Default will be to consider to use the in-progress \
+                             release 'master'.",
+                        )
+                        .default_value("master")
+                        .required(false),
+                )
+                .arg(
+                    Arg::with_name("patch")
+                        .help("Local or web patch that will be applied.")
+                        .required(true),
+                )
+                .arg(
+                    Arg::with_name("upstream")
+                        .short("u")
+                        .long("upstream")
+                        .takes_value(true)
+                        .help("Upstream name used to grab source on github. (e.g. trove).")
+                        .required(false),
+                ),
+        )
+        .subcommand(
             SubCommand::with_name("build")
                 .about("Build the Ubuntu package.")
                 .arg(
@@ -377,6 +439,13 @@ fn cli() -> std::result::Result<(), ()> {
         ret = snapshot(
             matches.value_of("project").unwrap(),
             matches.value_of("version").unwrap(),
+            matches.value_of("upstream"),
+        );
+    } else if let Some(matches) = matches.subcommand_matches("debdiff") {
+        ret = debdiff(
+            matches.value_of("project").unwrap(),
+            matches.value_of("release").unwrap(),
+            matches.value_of("patch").unwrap(),
             matches.value_of("upstream"),
         );
     } else if let Some(matches) = matches.subcommand_matches("publish") {

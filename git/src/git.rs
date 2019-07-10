@@ -20,6 +20,7 @@ pub enum Error {
     ShowError(),
     PushError(String),
     HashError(),
+    ApplyError(),
     Fatal(String),
 }
 
@@ -33,6 +34,7 @@ impl Display for Error {
             ShowError() => write!(f, "unable to show last commit"),
             HashError() => write!(f, "unable to generate hash based on last commit"),
             PushError(s) => write!(f, "unable to push changes to {}", s),
+            ApplyError() => write!(f, "unable to apply patch"),
             Fatal(s) => write!(f, "unexpected error {}", s),
         }
     }
@@ -141,6 +143,30 @@ impl Git {
             .status()?;
         if !o.success() {
             return Err(Error::ShowError());
+        }
+        Ok(())
+    }
+
+    pub fn apply_from_url(&self, url: &str) -> Result<()> {
+        let o = Command::new("/bin/sh")
+            .current_dir(&self.workdir)
+            .arg("-c")
+            .arg(format!("curl -L {} -sSf | git apply", url))
+            .status()?;
+        if !o.success() {
+            return Err(Error::ApplyError());
+        }
+        Ok(())
+    }
+
+    pub fn apply_from_file(&self, patch: PathBuf) -> Result<()> {
+        let o = Command::new("git")
+            .current_dir(&self.workdir)
+            .arg("apply")
+            .arg(patch)
+            .status()?;
+        if !o.success() {
+            return Err(Error::ApplyError());
         }
         Ok(())
     }
