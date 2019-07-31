@@ -81,9 +81,9 @@ fn rebase(
             uppercase_first_letter(OS_MASTER)
         };
         if bugid.is_some() {
-            ChangeLogMessage::OSNewUpstreamReleaseWithBug(formated_name, bugid.unwrap().to_string())
+            ChangeLogMessage::OSNewStablePointReleaseWithBug(formated_name, bugid.unwrap().to_string())
         } else {
-            ChangeLogMessage::OSNewUpstreamRelease(formated_name)
+            ChangeLogMessage::OSNewStablePointRelease(formated_name)
         }
     } else {
         // Assumes KIND_REGULAR
@@ -123,7 +123,7 @@ fn snapshot(name: &str, version: &str, upstream: Option<&str>) -> Result<()> {
     let archive = format!("../{}_{}.orig.tar.gz", nameup, gitversion);
     pkg.apply_tarball(version, &archive)?;
 
-    let msg = ChangeLogMessage::OSNewUpstreamRelease(uppercase_first_letter(OS_MASTER));
+    let msg = ChangeLogMessage::OSNewUpstreamSnapshot(uppercase_first_letter(OS_MASTER));
     let chg = &pkg.changelog;
     chg.new_release(&gitversion, msg);
 

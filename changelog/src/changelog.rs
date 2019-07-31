@@ -79,7 +79,9 @@ impl Version {
 
 pub enum ChangeLogMessage {
     OSNewUpstreamRelease(String),
-    OSNewUpstreamReleaseWithBug(String, String),
+    OSNewUpstreamSnapshot(String),
+    OSNewStablePointRelease(String),
+    OSNewStablePointReleaseWithBug(String, String),
     NewUpstreamRelease(String),
     NewUpstreamReleaseWithBug(String, String),
 }
@@ -89,12 +91,14 @@ impl Display for ChangeLogMessage {
         use self::ChangeLogMessage::*;
         match self {
             OSNewUpstreamRelease(s) => write!(f, "New upstream release for OpenStack {}.", s),
-            OSNewUpstreamReleaseWithBug(s, b) => {
-                write!(f, "New upstream release for OpenStack {}. (LP# {}).", s, b)
+            OSNewUpstreamSnapshot(s) => write!(f, "New upstream snapshot for OpenStack {}.", s),
+            OSNewStablePointRelease(s) => write!(f, "New stable point release for OpenStack {}.", s),
+            OSNewStablePointReleaseWithBug(s, b) => {
+                write!(f, "New stable point release for OpenStack {} (LP# {}).", s, b)
             }
-            NewUpstreamRelease(s) => write!(f, "New upstream release for OpenStack {}.", s),
+            NewUpstreamRelease(s) => write!(f, "New upstream release {}.", s),
             NewUpstreamReleaseWithBug(s, b) => {
-                write!(f, "New upstream release {}. (LP# {}).", s, b)
+                write!(f, "New upstream release {} (LP# {}).", s, b)
             }
         }
     }
