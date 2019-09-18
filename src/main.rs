@@ -169,7 +169,7 @@ fn debdiff(name: &str, release: &str, patch: &str, upstream: Option<&str>) -> Re
 fn build(name: &str) -> Result<()> {
     println!("Building {}...", name);
 
-    Package::new(name, get_current_dir()).build()
+    Package::new(name, get_current_dir())?.build()
 }
 
 /// Clones package.
