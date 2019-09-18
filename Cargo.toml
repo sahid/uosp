@@ -16,5 +16,5 @@ name = "uosp"
 [dependencies]
 changelog = { path = "changelog", version = "0.1.0" }
 git = { path = "git", version = "0.1.0" }
-
+dirs = "2.0"
 clap = ">= 2.27.1"

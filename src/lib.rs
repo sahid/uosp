@@ -11,6 +11,7 @@ use std::path::PathBuf;
 use std::process::Command;
 
 use changelog::ChangeLog;
+use dirs::home_dir;
 use git::{Git, GitCloneUrl};
 
 static GIT_STABLE_BRANCH: &'static str = "stable";
@@ -187,10 +188,13 @@ impl Package {
         let githash = gitupstream.get_hash()?;
         let gitversion = self.version_from_githash(version, &githash);
 
+        let home = home_dir().ok_or(
+            Error::Fatal("Could not find your home directory".to_string())
+        )?;
         // The tarball generated is located in '~/tarballs', so let's
         // move it in the package rootdir.
         fs::rename(
-            format!("~/tarballs/{}_*.orig.tar.gz", nameup),
+            format!("{}/tarballs/{}_*.orig.tar.gz", home.display(), nameup),
             format!("{}/{}_{}.orig.tar.gz",
                 self.rootdir.to_str().unwrap(),
                 nameup,
