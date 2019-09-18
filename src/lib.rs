@@ -66,13 +66,13 @@ impl Package {
         // I should refer gbp.conf
         let mut builddir = rootdir.clone();
         builddir.push("build-area");
-        Command::new("mkdir").arg("-p").arg(builddir).status();
+        let _ = Command::new("mkdir").arg("-p").arg(builddir).status();
 
         let mut workdir = rootdir.clone();
         workdir.push(name);
         Package {
             name: name.to_string(),
-            rootdir: rootdir,
+            rootdir,
             workdir: workdir.clone(),
             changelog: ChangeLog::new(workdir.clone()),
             git: None,
