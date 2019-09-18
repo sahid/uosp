@@ -12,7 +12,7 @@ use std::process::Command;
 use changelog::ChangeLog;
 use git::{Git, GitCloneUrl};
 
-static GIT_STABLE_BRANCH: &'static str = "stable";
+static GIT_STABLE_BRANCH: &str = "stable";
 
 #[derive(Debug)]
 pub enum Error {
