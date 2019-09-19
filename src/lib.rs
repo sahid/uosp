@@ -62,7 +62,6 @@ pub struct Package {
 }
 
 impl Package {
-    // TODO(sahid): This should probably return a Result<Package>
     pub fn new(name: &str, rootdir: PathBuf) -> Result<Package> {
         // TODO(sahid): Do we really need this here?
         // I should refer gbp.conf
