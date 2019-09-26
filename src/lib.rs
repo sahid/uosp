@@ -82,7 +82,7 @@ impl Package {
     /// Returns a `Package` after to have cloned its repository.
     ///
     /// By default project will be cloned using ``
-    pub fn clone(name: &str, rootdir: PathBuf, kind: &str, dist: &str) -> Result<Package> {
+    pub fn clone(name: &str, rootdir: PathBuf, _kind: &str, dist: &str) -> Result<Package> {
         let mut pkg = Package::new(name, rootdir)?;
         let url = if dist == "ubuntu" {
             GitCloneUrl::UbuntuServerDev(name.to_string())
@@ -186,18 +186,19 @@ impl Package {
         let githash = gitupstream.get_hash()?;
         let gitversion = self.version_from_githash(version, &githash);
 
-        let home = home_dir().ok_or(
-            Error::Fatal("Could not find your home directory".to_string())
-        )?;
+        let home = home_dir()
+            .ok_or_else(|| Error::Fatal("Could not find your home directory".to_string()))?;
         // The tarball generated is located in '~/tarballs', so let's
         // move it in the package rootdir.
         fs::rename(
             format!("{}/tarballs/{}_*.orig.tar.gz", home.display(), nameup),
-            format!("{}/{}_{}.orig.tar.gz",
+            format!(
+                "{}/{}_{}.orig.tar.gz",
                 self.rootdir.to_str().unwrap(),
                 nameup,
-                gitversion),
-            )?;
+                gitversion
+            ),
+        )?;
         Ok(githash)
     }
 
@@ -214,7 +215,7 @@ impl Package {
     }
 
     /// Publishing a package in launchpad PPA
-    pub fn publish(&self, ppa: &str, serie: &str, fake: bool) -> Result<()> {
+    pub fn publish(&self, ppa: &str, serie: &str, _fake: bool) -> Result<()> {
         let version = self.changelog.get_head_version().unwrap();
         // Really ugly...
         let o = Command::new("date").arg("+%Y%m%d%H%M").output()?;
