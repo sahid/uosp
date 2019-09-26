@@ -87,7 +87,7 @@ impl Git {
     pub fn new(name: &str, rootdir: PathBuf, url: GitCloneUrl) -> Result<Git> {
         let mut workdir = rootdir.clone();
         workdir.push(name);
-        let git = Git { workdir: workdir };
+        let git = Git { workdir };
         if !git.exists() {
             Command::new("mkdir").arg("-p").arg(&rootdir).status()?;
 

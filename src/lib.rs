@@ -14,7 +14,7 @@ use changelog::ChangeLog;
 use dirs::home_dir;
 use git::{Git, GitCloneUrl};
 
-static GIT_STABLE_BRANCH: &'static str = "stable";
+static GIT_STABLE_BRANCH: &str = "stable";
 
 #[derive(Debug)]
 pub enum Error {
@@ -68,12 +68,11 @@ impl Package {
         let mut builddir = rootdir.clone();
         builddir.push("build-area");
         fs::create_dir_all(builddir)?;
-
         let mut workdir = rootdir.clone();
         workdir.push(name);
         Ok(Package {
             name: name.to_string(),
-            rootdir: rootdir,
+            rootdir,
             workdir: workdir.clone(),
             changelog: ChangeLog::new(workdir.clone()),
             git: None,

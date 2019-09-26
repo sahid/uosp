@@ -18,9 +18,9 @@ use changelog::ChangeLogMessage;
 use clap::{App, AppSettings, Arg, SubCommand};
 use uosp::*;
 
-const OS_MASTER: &'static str = "train";
-const KIND_OPENSTACK: &'static str = "openstack";
-const KIND_REGULAR: &'static str = "regular";
+const OS_MASTER: &str = "train";
+const KIND_OPENSTACK: &str = "openstack";
+const KIND_REGULAR: &str = "regular";
 
 fn get_current_dir() -> std::path::PathBuf {
     std::env::current_dir().unwrap()
@@ -81,7 +81,10 @@ fn rebase(
             uppercase_first_letter(OS_MASTER)
         };
         if bugid.is_some() {
-            ChangeLogMessage::OSNewStablePointReleaseWithBug(formated_name, bugid.unwrap().to_string())
+            ChangeLogMessage::OSNewStablePointReleaseWithBug(
+                formated_name,
+                bugid.unwrap().to_string(),
+            )
         } else {
             ChangeLogMessage::OSNewStablePointRelease(formated_name)
         }
@@ -132,13 +135,13 @@ fn snapshot(name: &str, version: &str, upstream: Option<&str>) -> Result<()> {
 
     // Wanning that the process is not yet finished.
     // TODO(sahid): implement some sort of magic to handle deps.
-    println!("");
+    println!();
     println!("/!\\ Please consider to check (build-)deps.");
 
     Ok(())
 }
 
-fn debdiff(name: &str, release: &str, patch: &str, upstream: Option<&str>) -> Result<()> {
+fn debdiff(name: &str, release: &str, patch: &str, _upstream: Option<&str>) -> Result<()> {
     let workdir = get_current_dir();
     let branch = Package::format_branch(release);
 
@@ -154,7 +157,7 @@ fn debdiff(name: &str, release: &str, patch: &str, upstream: Option<&str>) -> Re
         git.apply_from_url(patch)?;
     } else {
         // localpatch
-        let mut file = std::path::PathBuf::from(get_current_dir());
+        let mut file = get_current_dir();
         file.push(patch);
         git.apply_from_file(file)?;
     }
@@ -196,7 +199,7 @@ fn publish(name: &str, ppa: &str, serie: &str, fake: bool, build: bool) -> Resul
     if !build {
         pkg.build()?;
     }
-    pkg.publish(ppa, serie, true);
+    pkg.publish(ppa, serie, true)?;
 
     Ok(())
 }

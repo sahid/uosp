@@ -44,7 +44,7 @@ impl From<&str> for Version {
 
 impl Version {
     fn extract_epoch(value: &str) -> Result<Option<u8>> {
-        let vec: Vec<&str> = value.split(":").collect();
+        let vec: Vec<&str> = value.split(':').collect();
         match vec[0].parse::<u8>() {
             Ok(v) => Ok(Some(v)),
             Err(_) => Ok(None)
@@ -52,8 +52,8 @@ impl Version {
     }
 
     fn extract_upstream(value: &str) -> Result<String> {
-        let vec: Vec<&str> = value.split(":").collect();
-        let idx = if !Self::extract_epoch(value).is_ok() {
+        let vec: Vec<&str> = value.split(':').collect();
+        let idx = if Self::extract_epoch(value).is_err() {
             0
         } else {
             1
@@ -65,7 +65,7 @@ impl Version {
     }
 
     fn extract_package(value: &str) -> Result<String> {
-        let vec: Vec<&str> = value.split("-").collect();
+        let vec: Vec<&str> = value.split('-').collect();
         match vec[1].parse::<String>() {
             Ok(v) => Ok(v),
             Err(s) => Err(Error::VersionError(s.to_string()))
@@ -110,7 +110,7 @@ pub struct ChangeLog {
 
 impl ChangeLog {
     pub fn new(workdir: PathBuf) -> ChangeLog {
-        ChangeLog { workdir: workdir }
+        ChangeLog { workdir }
     }
 
     pub fn get_head_full_version(&self) -> String {
@@ -125,7 +125,7 @@ impl ChangeLog {
 
     pub fn get_head_epoch(&self) -> Option<u32> {
         let ver = self.get_head_full_version();
-        let vec: Vec<&str> = ver.split(":").collect();
+        let vec: Vec<&str> = ver.split(':').collect();
         match vec[0].parse::<u32>() {
             Ok(v) => Some(v),
             Err(_) => None,
@@ -134,14 +134,14 @@ impl ChangeLog {
 
     pub fn get_head_version(&self) -> Option<String> {
         let ver = self.get_head_full_version();
-        let vec: Vec<&str> = ver.split(":").collect();
+        let vec: Vec<&str> = ver.split(':').collect();
         if vec.len() > 1 {
             match vec[1].parse::<String>() {
                 Ok(v) => return Some(v),
                 Err(_) => return None,
             }
         }
-        return Some(ver);
+        Some(ver)
     }
 
     pub fn new_release(&self, version: &str, message: ChangeLogMessage) {
