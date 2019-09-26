@@ -20,7 +20,7 @@ use uosp::*;
 
 const OS_MASTER: &str = "train";
 const KIND_OPENSTACK: &str = "openstack";
-const KIND_REGULAR: &str = "regular";
+// const KIND_REGULAR: &str = "regular";
 
 fn get_current_dir() -> std::path::PathBuf {
     std::env::current_dir().unwrap()
