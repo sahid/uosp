@@ -19,6 +19,10 @@ see: debian/control
 About the debian package, since librust-clap-dev is only available
 starts to disco, we do support it from here.
 
+## CI
+
+https://travis-ci.org/sahid/uosp
+
 ## Documentation
 
 Unfortunately not a lot so far. I would recomand to use `-help` from
