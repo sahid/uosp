@@ -11,6 +11,7 @@ use std::path::PathBuf;
 use std::process::Command;
 
 use changelog::ChangeLog;
+use chrono::prelude::*;
 use dirs::home_dir;
 use git::{Git, GitCloneUrl};
 
@@ -202,29 +203,19 @@ impl Package {
     }
 
     pub fn version_from_githash(&self, version: &str, githash: &str) -> String {
-        // Really ugly...
-        let o = Command::new("date")
-            .current_dir(&self.workdir)
-            .arg("+%Y%m%d%H")
-            .output()
-            .expect("unable to generate date");
-        let date = String::from_utf8(o.stdout).unwrap().trim().to_string();
-
-        format!("{}~git{}.{}", version, date, githash)
+        let utc: DateTime<Utc> = Utc::now();
+        format!("{}~git{}.{}", version, utc.format("%Y%m%d%H"), githash)
     }
 
     /// Publishing a package in launchpad PPA
     pub fn publish(&self, ppa: &str, serie: &str, _fake: bool) -> Result<()> {
         let version = self.changelog.get_head_version().unwrap();
-        // Really ugly...
-        let o = Command::new("date").arg("+%Y%m%d%H%M").output()?;
-        let date = String::from_utf8(o.stdout).unwrap().trim().to_string();
-
+        let utc: DateTime<Utc> = Utc::now();
         //manila_9.0.0~b1~git2019061715.86823b5c-0ubuntu1.dsc
         Command::new("backportpackage")
             .current_dir(&self.rootdir)
             .arg("-S")
-            .arg(format!("~ppa{}", &date))
+            .arg(format!("~ppa{}", utc.format("%Y%m%d%H%M")))
             .arg("-u")
             .arg(ppa)
             .arg("-d")
