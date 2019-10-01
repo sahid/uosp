@@ -80,11 +80,8 @@ fn rebase(
         } else {
             uppercase_first_letter(OS_MASTER)
         };
-        if bugid.is_some() {
-            ChangeLogMessage::OSNewStablePointReleaseWithBug(
-                formated_name,
-                bugid.unwrap().to_string(),
-            )
+        if let Some(bugid) = bugid {
+            ChangeLogMessage::OSNewStablePointReleaseWithBug(formated_name, bugid.to_string())
         } else {
             ChangeLogMessage::OSNewStablePointRelease(formated_name)
         }
@@ -118,10 +115,9 @@ fn snapshot(name: &str, version: &str, upstream: Option<&str>) -> Result<()> {
     let gitversion = pkg.version_from_githash(version, &githash);
 
     // The actions in a package refer always to rootdir/name/
-    let nameup = if upstream.is_some() {
-        upstream.unwrap()
-    } else {
-        name
+    let nameup = match upstream {
+        Some(upstream) => upstream,
+        None => name,
     };
     let archive = format!("../{}_{}.orig.tar.gz", nameup, gitversion);
     pkg.apply_tarball(version, &archive)?;

@@ -166,10 +166,9 @@ impl Package {
         let mut rootdir = self.rootdir.clone();
         rootdir.push("t");
 
-        let nameup = if upstream.is_some() {
-            upstream.unwrap()
-        } else {
-            &self.name
+        let nameup = match upstream {
+            Some(upstream) => upstream,
+            None => &self.name,
         };
 
         let gitupstream = Git::new(
