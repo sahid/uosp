@@ -219,7 +219,9 @@ fn pushlp(name: &str, account: &str) -> Result<()> {
 
     Ok(())
 }
-
+// The below deprecation is allowed because of a deprecation in
+// the Clap library: https://github.com/clap-rs/clap/issues/1552
+#[allow(deprecated)]
 fn cli() -> std::result::Result<(), ()> {
     let matches = App::new(crate_name!())
         .version(crate_version!())
