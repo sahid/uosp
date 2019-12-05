@@ -4,8 +4,8 @@ Collection of commands helping managing Ubuntu OpenStack packages.
 
 ## Important considerations
 
-Most of them are actually wrapper until to write everything in pure
-Rust. *You may need to install dependencies.*
+Most of them are wrapper until to write everything in pure Rust. *You
+may need to install dependencies.*
 
 see: debian/control
 
