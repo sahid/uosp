@@ -18,7 +18,7 @@ use changelog::ChangeLogMessage;
 use clap::{App, AppSettings, Arg, SubCommand};
 use uosp::*;
 
-const OS_MASTER: &str = "train";
+const OS_MASTER: &str = "ussuri";
 const KIND_OPENSTACK: &str = "openstack";
 // const KIND_REGULAR: &str = "regular";
 
