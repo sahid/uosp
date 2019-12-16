@@ -12,7 +12,6 @@ use std::process::Command;
 
 use changelog::ChangeLog;
 use chrono::prelude::*;
-use dirs::home_dir;
 use git::{Git, GitCloneUrl};
 
 static GIT_STABLE_BRANCH: &str = "stable";
@@ -182,23 +181,20 @@ impl Package {
         Command::new("pkgos-generate-snapshot")
             .current_dir(&gitupstream.workdir)
             .status()?;
-
         let githash = gitupstream.get_hash()?;
         let gitversion = self.version_from_githash(version, &githash);
-
-        let home = home_dir()
-            .ok_or_else(|| Error::Fatal("Could not find your home directory".to_string()))?;
         // The tarball generated is located in '~/tarballs', so let's
         // move it in the package rootdir.
-        fs::rename(
-            format!("{}/tarballs/{}_*.orig.tar.gz", home.display(), nameup),
-            format!(
-                "{}/{}_{}.orig.tar.gz",
+        Command::new("/bin/sh")
+            .arg("-c")
+            .arg(format!(
+                "mv ~/tarballs/{}_*.orig.tar.gz {}/{}_{}.orig.tar.gz",
+                nameup,
                 self.rootdir.to_str().unwrap(),
                 nameup,
                 gitversion
-            ),
-        )?;
+            ))
+            .status()?;
         Ok(githash)
     }
 
