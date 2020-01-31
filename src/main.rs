@@ -97,6 +97,58 @@ fn rebase(
     Ok(())
 }
 
+// TODO(sahid): should be merged with rebase, the diff si only in the
+// change log message.
+fn upstream(
+    name: &str,
+    version: &str,
+    release: &str,
+    bugid: Option<&str>,
+    kind: &str,
+    dist: &str,
+) -> Result<()> {
+    println!(
+        "Rebasing {} {} to new upstream version '{}'...",
+        name, release, version
+    );
+
+    let workdir = get_current_dir();
+    let branch = Package::format_branch(release);
+
+    let pkg = Package::clone(name, workdir.clone(), kind, dist)?;
+
+    let git = pkg.git.as_ref().unwrap();
+    git.checkout("pristine-tar")?;
+    git.checkout("upstream")?;
+    git.checkout(&branch)?;
+
+    pkg.download_tarball(version)?;
+    // The actions in a package refer always to rootdir/name/
+    let archive = format!("../{}_{}.orig.tar.gz", name, version);
+    pkg.apply_tarball(version, &archive)?;
+
+    let chg = &pkg.changelog;
+    // TODO(sahid): Need to move all of that in changelog, the method
+    // whould be something like: chg.new_release(version, message, dist, kind)
+    let msg = if kind == KIND_OPENSTACK {
+        let formated_name = if release != "master" {
+            uppercase_first_letter(release)
+        } else {
+            uppercase_first_letter(OS_MASTER)
+        };
+        ChangeLogMessage::OSNewUpstreamSnapshot(formated_name)
+    } else {
+        // Assumes KIND_REGULAR
+        ChangeLogMessage::NewUpstreamRelease(version.to_string())
+    };
+    chg.new_release(version, msg);
+
+    git.debcommit()?;
+    git.show()?;
+
+    Ok(())
+}
+
 /// Creates snapshot of an upstream source and rebase the package with it.
 fn snapshot(name: &str, version: &str, upstream: Option<&str>) -> Result<()> {
     println!("Updating package {} to a new upstream snapshot...", name);
@@ -293,6 +345,69 @@ fn cli() -> std::result::Result<(), ()> {
                 ),
         )
         .subcommand(
+            SubCommand::with_name("upstream")
+                .about("New upstream release.")
+                .arg(
+                    Arg::with_name("project")
+                        .value_name("PACKAGE")
+                        .help("The package name. (e.g. nova).")
+                        .required(true),
+                )
+                .arg(
+                    Arg::with_name("version")
+                        .value_name("VERSION")
+                        .help("Openstack version. (e.g. 19.0.1).")
+                        .required(true),
+                )
+                .arg(
+                    Arg::with_name("release")
+                        .short("r")
+                        .long("release")
+                        .takes_value(true)
+                        .help(
+                            "Openstack release name. (e.g. stein). \
+                             Default will be to consider to use the in-progress \
+                             release 'master'.",
+                        )
+                        .default_value("master")
+                        .required(false),
+                )
+                .arg(
+                    Arg::with_name("bugid")
+                        .short("b")
+                        .long("bugid")
+                        .takes_value(true)
+                        .help("Launchpad bug ID associated to release (e.g: 123456).")
+                        .required(false),
+                )
+                .arg(
+                    Arg::with_name("kind")
+                        .short("k")
+                        .long("kind")
+                        .takes_value(true)
+                        .default_value("openstack")
+                        .possible_values(&["openstack", "regular"])
+                        .help(
+                            "Indicate what kind of package it is, this help determining \
+                             version and change log message.",
+                        )
+                        .required(false),
+                )
+                .arg(
+                    Arg::with_name("dist")
+                        .short("d")
+                        .long("dist")
+                        .takes_value(true)
+                        .default_value("ubuntu")
+                        .possible_values(&["ubuntu", "debian"])
+                        .help(
+                            "Indicate the distribution for this package, this help determining \
+                             version and change log message.",
+                        )
+                        .required(false),
+                ),
+        )
+        .subcommand(
             SubCommand::with_name("snapshot")
                 .about("Update an Ubuntu package to a new upstream snapshot.")
                 .arg(
@@ -427,6 +542,15 @@ fn cli() -> std::result::Result<(), ()> {
 
     if let Some(matches) = matches.subcommand_matches("rebase") {
         ret = rebase(
+            matches.value_of("project").unwrap(),
+            matches.value_of("version").unwrap(),
+            matches.value_of("release").unwrap(),
+            matches.value_of("bugid"),
+            matches.value_of("kind").unwrap(),
+            matches.value_of("dist").unwrap(),
+        );
+    } else if let Some(matches) = matches.subcommand_matches("upstream") {
+        ret = upstream(
             matches.value_of("project").unwrap(),
             matches.value_of("version").unwrap(),
             matches.value_of("release").unwrap(),
